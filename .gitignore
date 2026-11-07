@@ -14,8 +14,11 @@ ehthumbs_vista.db
 
 # Dependencias y entornos
 node_modules/
+venv/
+.venv/
 dist/
 build/
+*.tsbuildinfo
 .env
 .env.local
 .secrets
