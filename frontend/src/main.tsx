@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './styles/variables.css';
 import './styles/layout.css';
 import './styles/components.css';
+import './styles/fit.css';
 import { App } from './App.tsx';
 
 // Registro de Service Worker PWA (Offline-First)
