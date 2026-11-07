@@ -28,7 +28,7 @@ def create_app(config_class=Config):
     from app.routes.auth import auth_bp
     from app.routes.products import products_bp
     from app.routes.sales import sales_bp
-    from app.routes.sync import sync_bp
+    from app.routes.sync import sync_bp, sync_sales_batch
     from app.routes.reports import reports_bp
 
     app.register_blueprint(auth_bp)
@@ -36,6 +36,14 @@ def create_app(config_class=Config):
     app.register_blueprint(sales_bp)
     app.register_blueprint(sync_bp)
     app.register_blueprint(reports_bp)
+
+    # Alias compatible con especificación /api/sync/sales-batch
+    app.add_url_rule(
+        '/api/sync/sales-batch',
+        endpoint='sync_sales_batch_alias',
+        view_func=sync_sales_batch,
+        methods=['POST'],
+    )
 
     # Endpoint de estado del servidor
     @app.route('/api/health', methods=['GET'])
@@ -74,6 +82,7 @@ def create_app(config_class=Config):
         response.headers.setdefault('X-Content-Type-Options', 'nosniff')
         response.headers.setdefault('Referrer-Policy', 'same-origin')
         response.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')
+        response.headers.setdefault('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()')
         return response
 
     # Manejadores de errores globales

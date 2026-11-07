@@ -1,87 +1,115 @@
+/* =========================================================================
+   POSITIVA-POS DESIGN SYSTEM — Tokens Semánticos, Regla 60-30-10 y WCAG AA
+   ========================================================================= */
 :root {
-  /* Paleta cromática moderna y de alto contraste (Dark Tech Theme por defecto) */
+  /* 60% Dominante — Superficies Modo Oscuro Predeterminado (Descanso Visual) */
   --bg-body: #0b0f19;
   --bg-surface: #111827;
-  --bg-card: #1f2937;
-  --bg-card-hover: #374151;
+  --bg-card: #1e293b;
+  --bg-card-hover: #334155;
   --bg-input: #111827;
-  
-  /* Acentos */
+
+  /* 30% Secundario / Identidad de Marca — Índigo y Púrpura Eléctrico */
   --primary: #4f46e5;
   --primary-hover: #4338ca;
-  --primary-light: rgba(79, 70, 229, 0.15);
+  --primary-accent: #6366f1;
+  --primary-light: rgba(79, 70, 229, 0.16);
   --accent-purple: #7c3aed;
   --accent-purple-hover: #6d28d9;
   --accent-cyan: #06b6d4;
+
+  /* 10% Acento Transaccional y Semántico (WCAG AA >= 4.5:1) */
+  /* Verde Esmeralda: exclusivo para CTA "Cobrar Venta", ONLINE y confirmaciones */
   --success: #10b981;
-  --success-light: rgba(16, 185, 129, 0.15);
+  --success-hover: #059669;
+  --success-light: rgba(16, 185, 129, 0.16);
   --stock-mint: #34d399;
-  --stock-mint-light: rgba(52, 211, 153, 0.15);
+  --stock-mint-light: rgba(52, 211, 153, 0.16);
+
+  /* Ámbar: exclusivo para estado OFFLINE y cola de sincronización pendiente */
   --warning: #f59e0b;
-  --warning-light: rgba(245, 158, 11, 0.15);
+  --warning-hover: #d97706;
+  --warning-light: rgba(245, 158, 11, 0.16);
+
+  /* Rojo Semántico: exclusivo para alertas de Stock Bajo/Crítico y errores */
   --danger: #ef4444;
-  --danger-light: rgba(239, 68, 68, 0.15);
-  --touch-min: 44px;
+  --danger-hover: #dc2626;
+  --danger-light: rgba(239, 68, 68, 0.16);
 
-  /* Texto */
-  --text-main: #f9fafb;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
+  /* Ergonomía Táctil — Ley de Fitts (>= 48px x 48px) */
+  --touch-min: 48px;
 
-  /* Bordes y Sombras */
-  --border-color: #374151;
+  /* Texto con Contraste WCAG AA (>= 4.5:1 sobre #0b0f19 / #1e293b) */
+  --text-main: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  /* Bordes y Elevación */
+  --border-color: #334155;
   --border-focus: #6366f1;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-full: 9999px;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.32);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.42), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 20px -4px rgba(0, 0, 0, 0.52), 0 4px 8px -4px rgba(0, 0, 0, 0.4);
   --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.35);
 
-  /* Tipografía */
+  /* Jerarquía Tipográfica Positiva-POS (32 / 22 / 16 / 14 / 11 px) */
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --fs-display: 2rem;       /* 32px — Total a cobrar y KPIs primarios */
+  --fs-h2: 1.375rem;        /* 22px — Encabezados de sección */
+  --fs-h3: 1rem;            /* 16px — Subtítulos y nombres de tarjeta */
+  --fs-body: 0.875rem;      /* 14px — Cuerpo, tablas y controles */
+  --fs-caption: 0.6875rem;  /* 11px — Etiquetas, códigos SKU y metadatos */
 
-  /* Transición de Tema */
-  --theme-transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  /* Transiciones */
+  --transition-fast: 0.15s ease;
+  --theme-transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 [data-theme="light"] {
-  /* Paleta Tema Claro Premium (Clean Modern POS) */
-  --bg-body: #f1f5f9;
+  /* 60% Dominante — Modo Claro de Alto Contraste para Mostradores Iluminados */
+  --bg-body: #f8fafc;
   --bg-surface: #ffffff;
   --bg-card: #ffffff;
-  --bg-card-hover: #f8fafc;
+  --bg-card-hover: #f1f5f9;
   --bg-input: #f8fafc;
 
-  /* Acentos */
+  /* 30% Identidad de Marca — Índigo y Púrpura Eléctrico */
   --primary: #4f46e5;
   --primary-hover: #4338ca;
+  --primary-accent: #6366f1;
   --primary-light: rgba(79, 70, 229, 0.12);
-  --accent-purple: #6d28d9;
-  --accent-purple-hover: #5b21b6;
+  --accent-purple: #7c3aed;
+  --accent-purple-hover: #6d28d9;
   --accent-cyan: #0284c7;
-  --success: #16a34a;
-  --success-light: rgba(22, 163, 74, 0.12);
-  --stock-mint: #059669;
-  --stock-mint-light: rgba(5, 150, 105, 0.12);
-  --warning: #d97706;
-  --warning-light: rgba(217, 119, 6, 0.12);
+
+  /* 10% Acentos Transaccionales con Contraste >= 4.5:1 sobre blanco */
+  --success: #059669;
+  --success-hover: #047857;
+  --success-light: rgba(5, 150, 105, 0.12);
+  --stock-mint: #047857;
+  --stock-mint-light: rgba(4, 120, 87, 0.12);
+  --warning: #b45309;
+  --warning-hover: #92400e;
+  --warning-light: rgba(245, 158, 11, 0.16);
   --danger: #dc2626;
+  --danger-hover: #b91c1c;
   --danger-light: rgba(220, 38, 38, 0.12);
 
-  /* Texto */
+  /* Texto de Alto Contraste sobre #f8fafc / #ffffff */
   --text-main: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
+  --text-secondary: #334155;
+  --text-muted: #475569;
 
   /* Bordes y Sombras */
-  --border-color: #e2e8f0;
+  --border-color: #cbd5e1;
   --border-focus: #4f46e5;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 8px -2px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --shadow-lg: 0 12px 20px -4px rgba(15, 23, 42, 0.12), 0 4px 8px -4px rgba(15, 23, 42, 0.06);
   --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.18);
 }

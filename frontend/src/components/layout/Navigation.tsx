@@ -8,13 +8,20 @@ export const Navigation: React.FC = () => {
 
   const lowStockCount = products.filter((p) => p.stock <= p.min_stock).length;
 
-  const tabs: Array<{ id: PosView; label: string; icon: React.ReactNode; badge?: number }> = [
+  const tabs: Array<{
+    id: PosView;
+    label: string;
+    icon: React.ReactNode;
+    badge?: number;
+    badgeTone?: 'danger' | 'warning';
+  }> = [
     { id: 'pos', label: 'Caja', icon: <ShoppingCart size={22} /> },
     {
       id: 'inventory',
       label: 'Inventario',
       icon: <Package size={22} />,
       badge: lowStockCount > 0 ? lowStockCount : undefined,
+      badgeTone: 'danger',
     },
     { id: 'reports', label: 'Reportes', icon: <BarChart3 size={22} /> },
     {
@@ -22,6 +29,7 @@ export const Navigation: React.FC = () => {
       label: 'Sync',
       icon: <RefreshCw size={22} />,
       badge: totalPendingCount > 0 ? totalPendingCount : undefined,
+      badgeTone: 'warning',
     },
   ];
 
@@ -37,7 +45,13 @@ export const Navigation: React.FC = () => {
         >
           <span className="nav-tab-icon">
             {tab.icon}
-            {tab.badge !== undefined && <span className="nav-tab-badge">{tab.badge}</span>}
+            {tab.badge !== undefined && (
+              <span
+                className={`nav-tab-badge ${tab.badgeTone === 'warning' ? 'badge-warning' : ''}`}
+              >
+                {tab.badge}
+              </span>
+            )}
           </span>
           <span className="nav-tab-label">{tab.label}</span>
         </button>

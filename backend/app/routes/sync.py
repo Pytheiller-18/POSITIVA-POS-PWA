@@ -4,7 +4,7 @@ from app.models.sale import Sale
 from app.models.sync_log import SyncAuditLog
 from app.services.sale_service import process_sale
 from app.middlewares.auth import tenant_required
-from app.utils.validators import clean_str
+from app.utils.validators import clean_str, require_json_object
 
 sync_bp = Blueprint('sync', __name__, url_prefix='/api/v1/sync')
 
@@ -24,7 +24,7 @@ def sync_sales_batch():
     Recibe un lote de ventas registradas offline en IndexedDB y las sincroniza en la nube.
     Garantiza idempotencia absoluta por `client_sync_id`.
     """
-    data = request.get_json(silent=True) or {}
+    data = require_json_object(request.get_json(silent=True))
     sales_batch = data.get('sales', [])
     device_id = clean_str(data.get('device_id'), 'device_id', 100) or 'PWA-CLIENT'
 

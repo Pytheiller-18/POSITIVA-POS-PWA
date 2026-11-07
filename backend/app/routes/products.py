@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify, g
 from app.extensions import db
 from app.models.product import Product, Category
 from app.middlewares.auth import tenant_required
-from app.utils.validators import to_decimal, to_int, clean_str
+from app.utils.validators import to_decimal, to_int, clean_str, require_json_object
 from app.utils.uuid7 import uuid7_str
 
 MAX_PRICE = 999_999_999
@@ -91,8 +91,8 @@ def get_product(product_id):
 @products_bp.route('', methods=['POST'])
 @tenant_required(allowed_roles=['ADMIN', 'MANAGER'])
 def create_product():
-    """Crea un nuevo producto en el catálogo del tenant."""
-    data = request.get_json(silent=True) or {}
+    """Crea un nuevo producto en el catálogo del tenant (ignora cualquier tenant_id externo)."""
+    data = require_json_object(request.get_json(silent=True))
     name = clean_str(data.get('name'), 'name', 150)
     if not name:
         return jsonify({'success': False, 'error': 'El nombre del producto es obligatorio'}), 400
@@ -104,7 +104,7 @@ def create_product():
         if existing:
             return jsonify({'success': False, 'error': f'Ya existe un producto con el código de barras {barcode}'}), 409
 
-    category_id = data.get('category_id')
+    category_id = clean_str(data.get('category_id'), 'category_id', 64) if data.get('category_id') else None
     if category_id:
         category = Category.query.filter_by(id=category_id, tenant_id=g.tenant_id).first()
         if not category:
@@ -117,8 +117,8 @@ def create_product():
         barcode=barcode,
         name=name,
         cost_price=to_decimal(data.get('cost_price'), 'cost_price', default=0, min_value=0, max_value=MAX_PRICE),
-        sale_price=to_decimal(data.get('sale_price'), 'sale_price', default=0, min_value=0, max_value=MAX_PRICE),
-        stock=to_int(data.get('stock'), 'stock', default=0, min_value=-MAX_STOCK, max_value=MAX_STOCK),
+        sale_price=to_decimal(data.get('sale_price'), 'sale_price', default=None, min_value='0.01', max_value=MAX_PRICE),
+        stock=to_int(data.get('stock'), 'stock', default=0, min_value=0, max_value=MAX_STOCK),
         min_stock=to_int(data.get('min_stock'), 'min_stock', default=5, min_value=0, max_value=MAX_STOCK),
         is_active=True
     )
@@ -136,7 +136,7 @@ def create_product():
 def update_product(product_id):
     """Actualiza datos de un producto dentro del tenant."""
     product = Product.query.filter_by(id=product_id, tenant_id=g.tenant_id).first_or_404()
-    data = request.get_json(silent=True) or {}
+    data = require_json_object(request.get_json(silent=True))
 
     if 'name' in data:
         name = clean_str(data['name'], 'name', 150)
@@ -153,7 +153,7 @@ def update_product(product_id):
         product.barcode = barcode
 
     if 'category_id' in data:
-        cat_id = data['category_id']
+        cat_id = clean_str(data['category_id'], 'category_id', 64) if data['category_id'] else None
         if cat_id:
             category = Category.query.filter_by(id=cat_id, tenant_id=g.tenant_id).first()
             if not category:
@@ -163,7 +163,7 @@ def update_product(product_id):
     if 'cost_price' in data:
         product.cost_price = to_decimal(data['cost_price'], 'cost_price', min_value=0, max_value=MAX_PRICE)
     if 'sale_price' in data:
-        product.sale_price = to_decimal(data['sale_price'], 'sale_price', min_value=0, max_value=MAX_PRICE)
+        product.sale_price = to_decimal(data['sale_price'], 'sale_price', min_value='0.01', max_value=MAX_PRICE)
     if 'stock' in data:
         product.stock = to_int(data['stock'], 'stock', min_value=-MAX_STOCK, max_value=MAX_STOCK)
     if 'min_stock' in data:
@@ -206,7 +206,7 @@ def list_categories():
 @tenant_required(allowed_roles=['ADMIN', 'MANAGER'])
 def create_category():
     """Crea una nueva categoría para la tienda."""
-    data = request.get_json(silent=True) or {}
+    data = require_json_object(request.get_json(silent=True))
     name = clean_str(data.get('name'), 'name', 100)
     if not name:
         return jsonify({'success': False, 'error': 'El nombre de categoría es obligatorio'}), 400

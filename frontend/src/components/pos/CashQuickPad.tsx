@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { ArrowRightLeft, Banknote, CreditCard } from 'lucide-react';
 import type { PaymentMethod } from '../../types/pos.ts';
+import { calculateCashChange } from '../../utils/domain.ts';
 import { computeBillSuggestions, formatCOP } from '../../utils/formatters.ts';
 
 interface CashQuickPadProps {
@@ -23,13 +24,20 @@ export const CashQuickPad: React.FC<CashQuickPadProps> = ({
   onAmountPaidChange,
 }) => {
   const suggestions = useMemo(() => computeBillSuggestions(total), [total]);
-  const diff = amountPaid - total;
+  const cashResult = useMemo(
+    () => calculateCashChange(total, amountPaid, paymentMethod),
+    [total, amountPaid, paymentMethod]
+  );
+
   const changeClass =
-    paymentMethod !== 'CASH' || diff === 0
+    cashResult.status === 'EXACT'
       ? 'change-exact'
-      : diff > 0
+      : cashResult.status === 'CHANGE'
         ? 'change-positive'
         : 'change-negative';
+
+  const displayedAmount =
+    cashResult.status === 'SHORT' ? cashResult.deficit : cashResult.changeDue;
 
   return (
     <div>
@@ -62,6 +70,19 @@ export const CashQuickPad: React.FC<CashQuickPadProps> = ({
 
       {paymentMethod === 'CASH' && total > 0 && (
         <>
+          <div className="quick-cash-row">
+            {suggestions.map((val) => (
+              <button
+                key={val}
+                type="button"
+                className={`cash-pill-btn ${amountPaid === val ? 'active' : ''}`}
+                onClick={() => onAmountPaidChange(val)}
+              >
+                {val === total ? 'Exacto' : formatCOP(val, currencySymbol)}
+              </button>
+            ))}
+          </div>
+
           <div className="form-group" style={{ marginBottom: '0.6rem' }}>
             <label className="form-label" htmlFor="cash-received-input">
               Efectivo Recibido ({currencySymbol})
@@ -89,28 +110,19 @@ export const CashQuickPad: React.FC<CashQuickPadProps> = ({
             </div>
           </div>
 
-          <div className="quick-cash-row">
-            {suggestions.map((val) => (
-              <button
-                key={val}
-                type="button"
-                className={`cash-pill-btn ${amountPaid === val ? 'active' : ''}`}
-                onClick={() => onAmountPaidChange(val)}
-              >
-                {val === total ? 'Exacto' : formatCOP(val, currencySymbol)}
-              </button>
-            ))}
-          </div>
-
-          <div className={`checkout-change-card ${changeClass}`} style={{ padding: '0.75rem 1rem', marginBottom: '0.85rem' }}>
+          <div className={`checkout-change-card ${changeClass}`}>
             <div className="change-label-group">
               <span className="change-label-title">
-                {diff < 0 ? 'Faltante por cubrir' : diff === 0 ? 'Pago Exacto' : 'Devuelta / Cambio'}
+                {cashResult.status === 'SHORT'
+                  ? 'Faltante por cubrir'
+                  : cashResult.status === 'EXACT'
+                    ? 'Pago Exacto'
+                    : 'Devuelta / Cambio'}
               </span>
-              <span className="change-label-subtitle">Cálculo reactivo de caja</span>
+              <span className="change-label-subtitle">Cálculo exacto en pesos COP</span>
             </div>
-            <span className="change-amount-display" style={{ fontSize: '1.35rem' }}>
-              {formatCOP(Math.abs(diff), currencySymbol)}
+            <span className="change-amount-display">
+              {formatCOP(displayedAmount, currencySymbol)}
             </span>
           </div>
         </>
@@ -118,4 +130,3 @@ export const CashQuickPad: React.FC<CashQuickPadProps> = ({
     </div>
   );
 };
-

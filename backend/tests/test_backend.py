@@ -21,6 +21,12 @@ class TestConfig(Config):
     WTF_CSRF_ENABLED = False
 
 class POSBackendTestCase(unittest.TestCase):
+    _DEMO_PWD_HASH = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls._DEMO_PWD_HASH = hash_password("pass123")
+
     def setUp(self):
         self.app = create_app(TestConfig)
         self.client = self.app.test_client()
@@ -42,7 +48,7 @@ class POSBackendTestCase(unittest.TestCase):
             tenant_id=self.tenant_a.id,
             full_name="Admin Alpha",
             email="admin@alpha.com",
-            password_hash=hash_password("pass123"),
+            password_hash=self._DEMO_PWD_HASH,
             role="ADMIN",
             is_active=True
         )
@@ -62,7 +68,7 @@ class POSBackendTestCase(unittest.TestCase):
             tenant_id=self.tenant_b.id,
             full_name="Admin Beta",
             email="admin@beta.com",
-            password_hash=hash_password("pass123"),
+            password_hash=self._DEMO_PWD_HASH,
             role="ADMIN",
             is_active=True
         )
@@ -420,8 +426,105 @@ class POSBackendTestCase(unittest.TestCase):
             self.assertEqual(res_sw.status_code, 200)
             self.assertEqual(res_sw.headers.get('Cache-Control'), 'no-cache')
             self.assertEqual(res_sw.headers.get('Service-Worker-Allowed'), '/')
+            self.assertIn('camera=(self)', res_sw.headers.get('Permissions-Policy', ''))
         finally:
             res_sw.close()
+
+    def test_anti_idor_tenant_spoofing_ignored(self):
+        """Aislamiento Multi-Tenant estricto: ignora tenant_id falsificado en body y usa siempre g.tenant_id del JWT."""
+        headers_a = {'Authorization': f'Bearer {self.token_a}'}
+        headers_b = {'Authorization': f'Bearer {self.token_b}'}
+
+        spoofed_product = {
+            'tenant_id': self.tenant_b.id,
+            'barcode': '770999888777',
+            'name': 'Arroz Roa 1kg',
+            'cost_price': 3200,
+            'sale_price': 4500,
+            'stock': 25,
+            'min_stock': 5,
+        }
+        res_prod = self.client.post('/api/v1/products', json=spoofed_product, headers=headers_a)
+        self.assertEqual(res_prod.status_code, 201)
+        self.assertEqual(res_prod.json['product']['tenant_id'], self.tenant_a.id)
+
+        spoofed_sale = {
+            'tenant_id': self.tenant_b.id,
+            'client_sync_id': uuid7_str(),
+            'items': [{'product_id': self.product_a.id, 'quantity': 1}],
+        }
+        res_sale = self.client.post('/api/v1/sales', json=spoofed_sale, headers=headers_a)
+        self.assertEqual(res_sale.status_code, 201)
+        self.assertEqual(res_sale.json['sale']['tenant_id'], self.tenant_a.id)
+
+        res_b_prods = self.client.get('/api/v1/products', headers=headers_b)
+        self.assertEqual(len(res_b_prods.json['products']), 1)
+        res_b_sales = self.client.get('/api/v1/sales', headers=headers_b)
+        self.assertEqual(res_b_sales.json['total_records'], 0)
+        self.assertEqual(len(res_b_sales.json['sales']), 0)
+
+    def test_input_hardening_negative_prices_and_xss_rejection(self):
+        """Hardening: rechaza precios cero/negativos, cantidades inválidas, booleanos y marcado XSS."""
+        headers_a = {'Authorization': f'Bearer {self.token_a}'}
+
+        invalid_products = [
+            {'name': 'Precio Cero', 'sale_price': 0, 'cost_price': 100, 'stock': 5},
+            {'name': 'Costo Negativo', 'sale_price': 1000, 'cost_price': -50, 'stock': 5},
+            {'name': 'Stock Negativo', 'sale_price': 1000, 'cost_price': 500, 'stock': -1},
+            {'name': '<script>alert(1)</script>', 'sale_price': 1500, 'cost_price': 900, 'stock': 5},
+            {'name': 'Booleano Tramposo', 'sale_price': True, 'cost_price': 500, 'stock': 5},
+        ]
+        for bad_payload in invalid_products:
+            res = self.client.post('/api/v1/products', json=bad_payload, headers=headers_a)
+            self.assertEqual(res.status_code, 400, f"Debió rechazar payload inválido: {bad_payload}")
+
+        bad_sales = [
+            {'client_sync_id': uuid7_str(), 'items': [{'product_id': self.product_a.id, 'quantity': 0}]},
+            {'client_sync_id': uuid7_str(), 'items': [{'product_id': self.product_a.id, 'quantity': -2}]},
+            {
+                'client_sync_id': uuid7_str(),
+                'notes': '<img src=x onerror=alert(1)>',
+                'items': [{'product_id': self.product_a.id, 'quantity': 1}],
+            },
+        ]
+        for bad_sale in bad_sales:
+            res = self.client.post('/api/v1/sales', json=bad_sale, headers=headers_a)
+            self.assertEqual(res.status_code, 400)
+
+        res_bad_date = self.client.get('/api/v1/sales?start_date=not-a-date', headers=headers_a)
+        self.assertEqual(res_bad_date.status_code, 400)
+
+    def test_causal_idempotency_audit_log_and_alias_endpoint(self):
+        """DDIA: Verifica endpoint /api/sync/sales-batch y trazabilidad en SyncAuditLog."""
+        from app.models.sync_log import SyncAuditLog
+
+        headers_a = {'Authorization': f'Bearer {self.token_a}'}
+        sync_uuid = uuid7_str()
+        batch = {
+            'device_id': 'POS-CAJA-ROLDANILLO',
+            'sales': [
+                {
+                    'client_sync_id': sync_uuid,
+                    'items': [{'product_id': self.product_a.id, 'quantity': 2}],
+                }
+            ],
+        }
+
+        res_first = self.client.post('/api/sync/sales-batch', json=batch, headers=headers_a)
+        self.assertEqual(res_first.status_code, 200)
+        self.assertEqual(res_first.json['summary']['synced_count'], 1)
+
+        res_retry = self.client.post('/api/sync/sales-batch', json=batch, headers=headers_a)
+        self.assertEqual(res_retry.status_code, 200)
+        self.assertEqual(res_retry.json['summary']['already_synced_count'], 1)
+
+        prod = db.session.get(Product, self.product_a.id)
+        self.assertEqual(prod.stock, 98)
+
+        logs = SyncAuditLog.query.filter_by(tenant_id=self.tenant_a.id, client_sync_id=sync_uuid).all()
+        statuses = [entry.status for entry in logs]
+        self.assertIn('SUCCESS', statuses)
+        self.assertIn('ALREADY_SYNCED', statuses)
 
 if __name__ == '__main__':
     unittest.main()

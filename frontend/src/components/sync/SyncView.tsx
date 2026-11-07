@@ -3,6 +3,7 @@ import { RefreshCw, ShieldCheck, Wifi, WifiOff } from 'lucide-react';
 import { usePos } from '../../context/PosContext.tsx';
 import { useDebounce } from '../../hooks/useDebounce.ts';
 import type { SyncStatusFilter } from '../../types/pos.ts';
+import { computeQuickDateRange } from '../../utils/domain.ts';
 import { filterSaleRecords } from '../../utils/filters.ts';
 import { ReportsFilterBar } from '../reports/ReportsFilterBar.tsx';
 import { SyncQueueTable } from './SyncQueueTable.tsx';
@@ -44,18 +45,9 @@ export const SyncView: React.FC = () => {
   );
 
   const applyQuickRange = (days: number | null) => {
-    if (days === null) {
-      setDateFrom('');
-      setDateTo('');
-      return;
-    }
-    const end = new Date();
-    const start = new Date();
-    start.setDate(end.getDate() - (days - 1));
-    const fmt = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    setDateFrom(fmt(start));
-    setDateTo(fmt(end));
+    const range = computeQuickDateRange(days);
+    setDateFrom(range.dateFrom);
+    setDateTo(range.dateTo);
   };
 
   const handleManualSync = async () => {

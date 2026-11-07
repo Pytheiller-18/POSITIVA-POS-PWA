@@ -3,6 +3,12 @@ import { describe, it } from 'node:test';
 import { chunkArray, extractProcessedIds } from '../services/sync.ts';
 import type { Product, SaleRecord } from '../types/pos.ts';
 import {
+  calculateCashChange,
+  computeCategoryHue,
+  computeQuickDateRange,
+  validateProductDraft,
+} from '../utils/domain.ts';
+import {
   buildAnalyticsSnapshot,
   filterCatalogProducts,
   filterSaleRecords,
@@ -239,4 +245,75 @@ describe('Positiva-POS — Finanzas de Caja, Analíticas Reales y Cola Offline',
     assert.ok(id2 < id3, `Se esperaba ${id2} < ${id3}`);
   });
 });
+
+describe('Positiva-POS — Capa de Dominio Puro, Hardening Anti-XSS y Caja COP', () => {
+  it('valida borradores de SKU y rechaza precios cero/negativos o marcado XSS', () => {
+    const clean = validateProductDraft({
+      barcode: '  7702004001  ',
+      name: '  Café Roldanillo 250g  ',
+      category_id: 'cat-cafe',
+      cost_price: 6500,
+      sale_price: 9500,
+      stock: 15,
+      min_stock: 3,
+    });
+    assert.equal(clean.barcode, '7702004001');
+    assert.equal(clean.name, 'Café Roldanillo 250g');
+    assert.equal(clean.sale_price, 9500);
+
+    assert.throws(() =>
+      validateProductDraft({
+        barcode: '7701',
+        name: 'Precio Cero',
+        cost_price: 100,
+        sale_price: 0,
+        stock: 5,
+        min_stock: 1,
+      })
+    );
+    assert.throws(() =>
+      validateProductDraft({
+        barcode: '7702',
+        name: '<script>alert(1)</script>',
+        cost_price: 100,
+        sale_price: 500,
+        stock: 5,
+        min_stock: 1,
+      })
+    );
+  });
+
+  it('calcula cambio exacto, devuelta y faltante en efectivo más sugerencias $10.000 / $20.000 / $50.000', () => {
+    const exact = calculateCashChange(14500, 14500, 'CASH');
+    assert.equal(exact.status, 'EXACT');
+    assert.equal(exact.changeDue, 0);
+
+    const change = calculateCashChange(14500, 20000, 'CASH');
+    assert.equal(change.status, 'CHANGE');
+    assert.equal(change.changeDue, 5500);
+
+    const short = calculateCashChange(14500, 10000, 'CASH');
+    assert.equal(short.status, 'SHORT');
+    assert.equal(short.deficit, 4500);
+
+    const card = calculateCashChange(14500, 0, 'CARD');
+    assert.equal(card.status, 'EXACT');
+    assert.equal(card.effectivePaid, 14500);
+
+    const bills = computeBillSuggestions(7200);
+    assert.deepEqual(bills, [7200, 10000, 20000, 50000]);
+  });
+
+  it('genera rangos rápidos de fechas y tonos deterministas por categoría', () => {
+    const range = computeQuickDateRange(7, new Date(2026, 10, 7, 12, 0, 0));
+    assert.equal(range.dateFrom, '2026-11-01');
+    assert.equal(range.dateTo, '2026-11-07');
+
+    const hueA = computeCategoryHue('Lácteos');
+    const hueB = computeCategoryHue('Lácteos');
+    assert.equal(hueA, hueB);
+    assert.ok(hueA >= 0 && hueA < 360);
+  });
+});
+
 

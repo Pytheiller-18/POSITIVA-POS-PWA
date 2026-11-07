@@ -1,182 +1,131 @@
-# Positiva-POS
+# Positiva-POS — *"Un sistema de ventas en tu bolsillo"*
 
-> **Positiva-POS: Sistema de Punto de Venta (POS) Ligero, Multi-Tenant y Offline-First con Arquitectura PWA y Sincronización en la Nube.**
+> **Plataforma SaaS de Punto de Venta (POS) y Control de Inventario Ligera (`< 2 MB`), Multi-Tenant y Local-First / Offline-First con Arquitectura Progressive Web App (PWA).**
 
-> [!NOTE]
-> **Estado del Proyecto:** Positiva-POS se encuentra actualmente en **estado de desarrollo** (Work in Progress / Beta activa). Nuevas características, mejoras y ajustes de estabilidad se incorporan continuamente.
-
-[![Estado](https://img.shields.io/badge/Estado-En%20Desarrollo-orange?style=for-the-badge)](https://github.com/)
-[![Python](https://img.shields.io/badge/Python-3.13+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![Flask](https://img.shields.io/badge/Flask-3.1.3-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![Estado](https://img.shields.io/badge/Versión-v1.2.0%20Verificada-10B981?style=for-the-badge)](https://github.com/Pytheiller-18/Sistema-POS-PWA)
+[![Frontend](https://img.shields.io/badge/Vite%206%20+%20React%2018-TypeScript-4F46E5?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
+[![Backend](https://img.shields.io/badge/Python%203-Flask%20+%20SQLAlchemy-111827?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![PWA](https://img.shields.io/badge/PWA-Offline--First-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
-[![IndexedDB](https://img.shields.io/badge/IndexedDB-Local--First-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/es/docs/Web/API/IndexedDB_API)
+[![PWA](https://img.shields.io/badge/PWA-Local--First%20IndexedDB-7C3AED?style=for-the-badge&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
 
 ---
 
-## 📌 Descripción del Proyecto
+## 📌 Propósito de Negocio y Modelo Comercial
 
-**Positiva-POS** es una solución integral de Punto de Venta diseñada bajo el paradigma **Local-First / Offline-First**, garantizando que una tienda o comercio minorista pueda continuar operando y facturando ventas aún cuando la conexión a internet sea inestable o inexistente. Al restablecerse la red, las transacciones se sincronizan de manera transparente e idempotente con el servidor central.
+**Positiva-POS** digitaliza tiendas de barrio, minimercados, cafeterías, comidas rápidas y comercios locales (1 a 10 empleados) en Roldanillo, el norte del Valle del Cauca y Colombia, garantizando operación continua sobre redes 3G/4G/Wi-Fi inestables y teléfonos de gama media/baja.
 
-### 🌟 Pilares y Capacidades Clave
-
-1. **Arquitectura Offline-First (PWA):**
-   - El catálogo de productos y las ventas se gestionan localmente en el navegador mediante **IndexedDB** y **Service Workers**.
-   - Funcionamiento continuo sin depender de la nube.
-   - Idempotencia garantizada por `client_sync_id` único para evitar cobros o deducciones de inventario duplicadas en reintentos.
-
-2. **Aislamiento Multi-Tenant (SaaS):**
-   - Múltiples tiendas operan sobre la misma infraestructura con estricta separación de datos mediante `tenant_id` obligatorio a nivel de modelos, middleware y consultas relacionales.
-   - Prevención exhaustiva de vulnerabilidades IDOR (*Insecure Direct Object References*).
-
-3. **Adaptabilidad Total (Móvil & Escritorio):**
-   - **Vista Celular:** Diseño táctil ultra-rápido, chips de categoría deslizables, escáner de cámara integrado y carrito flotante tipo cajón inferior.
-   - **Vista Computador (Escritorio):** Pantalla partida clásica de caja (*Dual-Pane*), catálogo a la izquierda y panel de orden/cobro permanente a la derecha con atajos rápidos de efectivo.
-   - **Soporte de Tema Dual (Claro & Oscuro):** Interfaz personalizable mediante selector en encabezado con paleta de alto contraste y persistencia local.
-
-4. **Lector de Códigos de Barras por Cámara (Offline-First):**
-   - Escaneo directo mediante cámara trasera en celulares o webcam en PC/laptops.
-   - Detección instantánea con visor y láser animado, linterna (*torch*), conmutación de cámaras y pitido sonoro (*beep*) sintetizado vía Web Audio API.
-   - Doble flujo operativo: ingreso directo a la orden en caja POS (soporta también lectores físicos USB/Bluetooth) y captura automática de SKU en inventario.
-
-5. **Cobro Inteligente y Cálculo Reactivo de Devuelta:**
-   - Sugerencias automáticas de billetes según el total a pagar, incrementos táctiles (`+$1.000` a `+$50.000`) y visualización en tiempo real de devuelta o saldo faltante.
-
-6. **Analíticas y Reportes de Ganancias:**
-   - Métricas en tiempo real: Ventas del día, ticket promedio, ventas acumuladas del mes (comparativa con mes previo), desglose anual de 12 meses, top 5 productos de mayor rotación y cálculo de utilidad neta (`Ingresos - Costos Históricos`).
+- **Nivel Freemium (`$0 COP/mes`):** Hasta 50 ventas mensuales, caja offline e inventario esencial.
+- **Plan Básico (`$15.000 COP/mes`):** Operación comercial ampliada y respaldos sincronizados en nube.
+- **Plan Plus / Avanzado (`$20.000 COP/mes`):** Ventas ilimitadas, multi-cajero, analítica financiera histórica y preparación arquitectónica para Facturación Electrónica DIAN y **Positiva-IA**.
 
 ---
 
-## 📑 Estructura de Directorios
+## 🌟 Pilares Arquitectónicos e Ingeniería
 
-El proyecto se encuentra desacoplado en dos módulos principales:
+1. **Replicación Local-First e Idempotencia Causal (`UUIDv7` RFC 9562):**
+   - Escrituras locales inmediatas (`< 100 ms`) en `IndexedDB` (`Dexie`) y sincronización diferida en lotes de 50 hacia `/api/v1/sync/sales-batch`.
+   - Trazabilidad auditable en `sync_log.py` (`SUCCESS`, `ALREADY_SYNCED`, `ERROR`) que impide cobros duplicados o dobles descuentos de inventario ante reintentos de red.
+
+2. **Aislamiento Multi-Tenant Anti-IDOR y Transacciones ACID:**
+   - Todo acceso relacional e IndexedDB filtra estrictamente por `tenant_id` inyectado desde el JWT firmado (`@tenant_required` -> `g.tenant_id`), ignorando cualquier identificador falsificado por el cliente.
+   - Deducción atómica de stock con bloqueo determinista (`SELECT ... FOR UPDATE`), `Decimal(12, 2)` exacto y sanitización anti-XSS en cliente y servidor.
+
+3. **Positiva-POS Design System (Ergonomía Táctil y Accesibilidad WCAG AA):**
+   - Identidad visual propia bajo regla cromática `60-30-10` con modo Oscuro predeterminado (`#0B0F19` / `#1E293B`) y modo Claro de alto contraste solar (`#F8FAFC` / `#FFFFFF`).
+   - **Ley de Fitts y Ley de Hick:** Controles interactivos `>= 48px × 48px`, sugerencias rápidas de efectivo COP (`Exacto`, `$10.000`, `$20.000`, `$50.000`), tipografía numérica tabular (`tabular-nums`), encuadre 100% dentro del viewport (`100dvh`) y cierre de venta en `<= 3` toques.
+
+4. **Escáner Óptico por Cámara y Analítica Financiera Real:**
+   - Decodificación local 1D/QR (`html5-qrcode.min.js`) con espejo CSS aislado al elemento `<video>`, linterna y confirmación sonora Web Audio API.
+   - Cálculo de utilidad neta sobre costo histórico (`unit_cost`) y tasa de rotación de inventario con filtros reactivos (*debounce* `180 ms`).
+
+---
+
+## 📑 Estructura Real del Repositorio
 
 ```text
-Positiva-POS/
-├── backend/                                   # Capa de API RESTful, Lógica de Negocio y Persistencia
+PROYECTO-POS/
+├── docs/
+│   ├── constitution.md                         # 6 principios arquitectónicos innegociables
+│   └── academic-artifacts/                     # Artefactos académicos e investigativos aislados
+│       ├── ficha-tecnica-investigacion.html    # Ficha técnica e informe interactivo del proyecto
+│       └── Diagrama Entidad-Relacion Positiva-POS.mwb
+├── specs/001-refactoring-pos/                  # Gobernanza Spec-Driven Development (Sintaxis EARS)
+│   ├── spec.md                                 # Requisitos EARS (REQ-01..REQ-08) y aceptación
+│   ├── plan.md                                 # Diseño Clean Architecture, DDIA y Design System
+│   └── tasks.md                                # Trazabilidad de ejecución verificada
+├── AGENTS.md                                   # Manual operativo y reglas Failure-to-Rule para IAs
+├── MEMORY.md                                   # Estado actual, métricas y hoja de ruta
+├── backend/                                    # API RESTful en Python 3 + Flask + SQLAlchemy
 │   ├── app/
-│   │   ├── __init__.py                        # Fábrica de aplicaciones Flask y registro de rutas
-│   │   ├── config.py                          # Configuración MySQL / SQLite fallback y JWT
-│   │   ├── extensions.py                      # Instancias de SQLAlchemy y Flask-CORS
-│   │   ├── middlewares/
-│   │   │   └── auth.py                        # Decorador @tenant_required y validación JWT
-│   │   ├── models/                            # Entidades relacionales del sistema
-│   │   │   ├── tenant.py                      # Tiendas / Empresas aisladas
-│   │   │   ├── user.py                        # Usuarios (Admin, Cajero, Manager)
-│   │   │   ├── product.py                     # Categorías y Productos con stock
-│   │   │   ├── sale.py                        # Ventas (Sales) e ítems con costo histórico
-│   │   │   └── sync_log.py                    # Auditoría de sincronización offline
-│   │   ├── routes/                            # Endpoints modulares (Blueprints)
-│   │   │   ├── auth.py                        # Login, registro de tenant y usuarios
-│   │   │   ├── products.py                    # CRUD de catálogo y consulta delta ?since=...
-│   │   │   ├── sales.py                       # Registro de ventas y detalle para ticket
-│   │   │   ├── sync.py                        # Sincronización de lotes offline (/sales-batch)
-│   │   │   └── reports.py                     # Reportes (hoy, mensual, anual, utilidades)
-│   │   └── services/
-│   │       ├── sale_service.py                # Transacciones ACID, stock e idempotencia
-│   │       └── report_service.py              # Agregaciones financieras y márgenes
-│   ├── tests/
-│   │   └── test_backend.py                    # Suite de 6 pruebas de aislamiento y seguridad
-│   ├── requirements.txt                       # Dependencias de Python
-│   ├── run.py                                 # Servidor con auto-siembra de datos demo
-│   └── schema.sql                             # DDL completo para MySQL 8.0+
-│
-├── frontend/                                  # Aplicación Cliente PWA (Offline-First)
-│   ├── index.html                             # Terminal de Punto de Venta responsiva
-│   ├── manifest.json                          # Web App Manifest instalable en Android, iOS, PC
-│   ├── sw.js                                  # Service Worker (Cache App Shell & Fetch fallback)
-│   ├── assets/
-│   │   └── icon.svg                           # Icono vectorial escalable de la PWA
-│   ├── css/
-│   │   ├── variables.css                      # Design Tokens y tema oscuro de alto contraste
-│   │   ├── layout.css                         # Grids responsivos (Mobile & Desktop Dual-Pane)
-│   │   └── components.css                     # Tarjetas, teclado de cobro, modales y ticket impreso
-│   └── js/
-│       ├── vendor/
-│       │   └── html5-qrcode.min.js            # Motor local de escaneo de códigos de barras por cámara
-│       ├── db.js                              # Envoltorio IndexedDB (almacén local del catálogo y cola)
-│       ├── api.js                             # Cliente HTTP con JWT y detección de fallos
-│       ├── sync.js                            # Gestor de sincronización offline y deltas
-│       └── app.js                             # Coordinador de vistas, carrito y cobro
-│
-├── index.html                                 # Portal de documentación y ficha técnica de investigación
-├── .gitignore                                 # Reglas de exclusión de Git
-└── README.md                                  # Documentación técnica del proyecto
+│   │   ├── __init__.py                         # Fábrica Flask, cabeceras seguras y servidor PWA
+│   │   ├── config.py                           # Configuración MySQL 8.0+ / SQLite y JWT
+│   │   ├── extensions.py                       # Instancias SQLAlchemy y CORS
+│   │   ├── middlewares/auth.py                 # JWT HS256 y @tenant_required anti-IDOR
+│   │   ├── models/                             # Entidades: tenant, user, product, sale, sync_log
+│   │   ├── routes/                             # Blueprints: auth, products, sales, sync, reports
+│   │   ├── services/                           # Lógica ACID: sale_service.py y report_service.py
+│   │   └── utils/                              # uuid7.py (RFC 9562) y validators.py (anti-XSS)
+│   ├── tests/test_backend.py                   # 19 pruebas automatizadas Multi-Tenant, ACID y Sync
+│   ├── requirements.txt                        # Dependencias de Python
+│   ├── run.py                                  # Servidor unificado (:5000) con semilla demo
+│   └── schema.sql                              # Esquema relacional oficial MySQL 8.0+
+└── frontend/                                   # Aplicación PWA en Vite 6 + React 18 + TypeScript
+    ├── public/
+    │   ├── manifest.json                       # Manifiesto instalable Android / iOS / Escritorio
+    │   ├── sw.js                               # Service Worker Offline-First (App Shell + API)
+    │   └── vendor/html5-qrcode.min.js          # Decodificador local de códigos de barras y QR
+    ├── src/
+    │   ├── styles/                             # Positiva-POS Design System: variables, layout, components
+    │   ├── utils/                              # Dominio puro: domain.ts, formatters.ts, filters.ts, uuid7.ts
+    │   ├── services/                           # IndexedDB (db.ts), cliente JWT (api.ts) y cola (sync.ts)
+    │   ├── hooks/                              # useAuth, useCatalog, useCart, useSync, useReports, useDebounce
+    │   ├── components/                         # Vistas modulares: pos, inventory, scanner, reports, sync, layout
+    │   └── __tests__/pos.test.ts               # 9 pruebas unitarias de dominio, finanzas COP y UUIDv7
+    ├── package.json                            # Scripts de compilación, tipado y pruebas
+    └── vite.config.ts                          # Configuración Vite y proxy de desarrollo hacia Flask
 ```
 
 ---
 
-## 🚀 Puesta en Marcha Rápida (Local)
+## 🚀 Puesta en Marcha y Verificación Rápida
 
-### 1. Iniciar el Servidor Unificado (Backend API + Frontend PWA)
-
-El backend cuenta con detección automática: si no hay un servidor MySQL configurado localmente, utiliza SQLite como motor de desarrollo sin necesidad de configuración adicional. Además, sirve la aplicación PWA en el mismo puerto (`5000`), permitiendo el acceso directo desde computadores y teléfonos móviles en la misma red Wi-Fi o mediante túneles sin conflictos de CORS.
-
-1. Abre una terminal e ingresa a la carpeta `backend`:
-   ```powershell
-   cd backend
-   ```
-2. Instala las dependencias:
-   ```powershell
-   python -m pip install -r requirements.txt
-   ```
-3. Inicia el servidor del sistema:
-   ```powershell
-   python run.py
-   ```
-   *El servidor inicializará las tablas y cargará datos de demostración si es la primera ejecución.*
-   *El punto de venta estará listo en:* **`http://localhost:5000/`**
-
-#### 🔑 Credenciales Demo Iniciales:
-- **Administrador:** `admin@pos.com` | Contraseña: `admin123`
-- **Cajero:** `cajero@pos.com` | Contraseña: `cajero123`
-
----
-
-### 2. Acceso desde Dispositivos Móviles (Wi-Fi o Celulares)
-
-1. Al estar unificado en el puerto `5000`, solo necesitas ingresar desde el navegador de tu celular a la dirección IP local de tu computador:
-   ```
-   http://<IP-DE-TU-PC>:5000/
-   ```
-2. Puedes instalar la aplicación como una PWA nativa tocando el botón «Instalar aplicación» o «Agregar a la pantalla de inicio».
-
----
-
-## 🧪 Verificación y Pruebas del Backend
-
-Para validar la seguridad multi-tenant, la deducción de inventario, la idempotencia contra ventas duplicadas y los cálculos financieros:
-
+### 1. Ejecutar Suite Completa de Pruebas y Compilación PWA
 ```powershell
-python backend/tests/test_backend.py
+# Backend: 19 pruebas (aislamiento Multi-Tenant, anti-IDOR, ACID, UUIDv7 y auditoría sync)
+python -m pip install -r backend/requirements.txt
+python backend/tests/test_backend.py -v
+
+# Frontend: verificación estricta TypeScript, 9 pruebas de dominio y build de producción
+cmd.exe /c "cd /d frontend && npm run lint && npm test && npm run build"
 ```
+
+### 2. Iniciar Servidor Unificado (API + PWA en `http://localhost:5000/`)
+```powershell
+python backend/run.py
+```
+- **Administrador Demo:** `admin@pos.com` | Contraseña: `admin123`
+- **Cajero Demo:** `cajero@pos.com` | Contraseña: `cajero123`
+- **Acceso Móvil en Red Local Wi-Fi:** `http://<IP-DE-TU-PC>:5000/`
 
 ---
 
-## 📡 Referencia de la API RESTful
+## 📡 Endpoints Principales de la API RESTful
 
 | Método | Endpoint | Descripción | Roles |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/auth/login` | Autenticación y entrega de token JWT | Público |
-| `POST` | `/api/v1/auth/register-tenant` | Registro de nueva tienda y administrador | Público |
-| `GET` | `/api/v1/auth/me` | Información del usuario y tienda activa | Todos |
-| `GET` | `/api/v1/products` | Catálogo de productos (con soporte `?since=...`) | Todos |
-| `POST` | `/api/v1/products` | Creación de nuevo producto | Admin/Manager |
-| `PUT` | `/api/v1/products/<id>` | Actualización de producto | Admin/Manager |
-| `POST` | `/api/v1/sales` | Registro directo de venta | Todos |
-| `POST` | `/api/v1/sync/sales-batch` | Sincronización de lote de ventas offline | Todos |
-| `GET` | `/api/v1/reports/today` | Ventas y tickets del día | Admin/Manager |
-| `GET` | `/api/v1/reports/monthly` | Resumen mensual y comparativa | Admin/Manager |
-| `GET` | `/api/v1/reports/profit` | Utilidad neta y margen | Admin |
+| `POST` | `/api/v1/auth/login` | Autenticación con limitador anti fuerza bruta y entrega JWT | Público |
+| `POST` | `/api/v1/auth/register-tenant` | Alta transaccional de nueva tienda y usuario administrador | Público |
+| `GET` | `/api/v1/products` | Catálogo por `tenant_id` con descarga diferencial `?since=` | Todos |
+| `POST` | `/api/v1/products` | Registro validado de SKU (`sale_price > 0`, `stock >= 0`) | Admin / Manager |
+| `POST` | `/api/v1/sales` | Registro transaccional ACID de venta con descuento atómico | Todos |
+| `POST` | `/api/v1/sync/sales-batch` | Conciliación idempotente de lotes offline (alias `/api/sync/sales-batch`) | Todos |
+| `GET` | `/api/v1/reports/today` | Ventas, transacciones y ticket promedio del día | Admin / Manager |
+| `GET` | `/api/v1/reports/profit` | Utilidad bruta y margen porcentual sobre costo histórico | Admin |
 
 ---
 
 ## 👤 Autor
 
-- **Heiller Tamayo** - *Desarrollo e Investigación*
+- **Heiller Tamayo** — *Desarrollo e Investigación Aplicada*
   - GitHub: [@Pytheiller-18](https://github.com/Pytheiller-18)
   - Correo: [heillertamayo@gmail.com](mailto:heillertamayo@gmail.com)
-
----
-
-Proyecto desarrollado como parte de la propuesta de investigación aplicada y sistematización de microempresas locales con arquitectura **Progressive Web App (PWA)**.

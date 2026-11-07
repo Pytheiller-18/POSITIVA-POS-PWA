@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, Plus } from 'lucide-react';
 import type { Product } from '../../types/pos.ts';
+import { computeCategoryHue } from '../../utils/domain.ts';
 import { formatCOP } from '../../utils/formatters.ts';
 
 interface ProductCardProps {
@@ -8,15 +9,6 @@ interface ProductCardProps {
   inCartQty: number;
   currencySymbol: string;
   onAdd: (product: Product) => void;
-}
-
-/** Tono HSL determinista por categoría para colorear la tesela (estilo Smart Grid). */
-function categoryHue(name: string): number {
-  let hash = 0;
-  for (let i = 0; i < name.length; i += 1) {
-    hash = (hash * 31 + name.charCodeAt(i)) % 360;
-  }
-  return hash;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -28,15 +20,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const isEmpty = product.stock <= 0;
   const isLow = product.stock > 0 && product.stock <= product.min_stock;
   const stockClass = isEmpty ? 'stock-empty' : isLow ? 'stock-low' : 'stock-ok';
-  const tileStyle = {
-    '--tile-hue': categoryHue(product.category_name || 'General'),
+  const cardStyle = {
+    '--card-hue': computeCategoryHue(product.category_name || 'General'),
     ...(isEmpty ? { opacity: 0.58, cursor: 'not-allowed' } : {}),
   } as React.CSSProperties;
 
   return (
     <div
-      className={`product-card smart-tile ${inCartQty > 0 ? 'in-cart' : ''}`}
-      style={tileStyle}
+      className={`product-card positiva-product-card ${inCartQty > 0 ? 'in-cart' : ''}`}
+      style={cardStyle}
       onClick={() => !isEmpty && onAdd(product)}
     >
       <div>
@@ -54,8 +46,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="product-price-row">
         <span className="product-price">{formatCOP(product.sale_price, currencySymbol)}</span>
         {inCartQty > 0 ? (
-          <span className="product-stock-tag stock-ok" style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-            <Check size={13} /> {inCartQty}
+          <span
+            className="product-stock-tag stock-ok"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 32 }}
+          >
+            <Check size={14} /> {inCartQty}
           </span>
         ) : (
           <button
@@ -63,16 +58,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             className="product-add-btn"
             disabled={isEmpty}
             title="Agregar producto a la orden"
+            aria-label={`Agregar ${product.name} a la orden`}
             onClick={(e) => {
               e.stopPropagation();
               if (!isEmpty) onAdd(product);
             }}
           >
-            <Plus size={16} />
+            <Plus size={18} />
           </button>
         )}
       </div>
     </div>
   );
 };
-

@@ -3,6 +3,7 @@ import { apiClient } from '../services/api.ts';
 import { DEMO_TENANT_ID, ensureDemoCatalogSeeded, posDB } from '../services/db.ts';
 import { syncEngine } from '../services/sync.ts';
 import type { Category, PendingProduct, Product } from '../types/pos.ts';
+import { validateProductDraft } from '../utils/domain.ts';
 import { generateUUIDv7 } from '../utils/uuid7.ts';
 
 export interface CreateProductInput {
@@ -57,11 +58,9 @@ export function useCatalog(tenantId: string, effectiveOnline: boolean) {
 
   const registerProduct = useCallback(
     async (input: CreateProductInput): Promise<{ product: Product; syncedOnline: boolean }> => {
-      const cleanBarcode = input.barcode.trim();
-      const cleanName = input.name.trim();
-      if (!cleanName || !cleanBarcode) {
-        throw new Error('El nombre y el código SKU/barras son obligatorios');
-      }
+      const validated = validateProductDraft(input);
+      const cleanBarcode = validated.barcode;
+      const cleanName = validated.name;
 
       const duplicate = await posDB.products
         .where('[tenant_id+barcode]')
@@ -78,11 +77,11 @@ export function useCatalog(tenantId: string, effectiveOnline: boolean) {
           const res = await apiClient.createProduct({
             barcode: cleanBarcode,
             name: cleanName,
-            category_id: input.category_id || null,
-            cost_price: input.cost_price,
-            sale_price: input.sale_price,
-            stock: input.stock,
-            min_stock: input.min_stock,
+            category_id: validated.category_id,
+            cost_price: validated.cost_price,
+            sale_price: validated.sale_price,
+            stock: validated.stock,
+            min_stock: validated.min_stock,
           });
           if (res.success && res.product) {
             const saved: Product = {
@@ -108,13 +107,13 @@ export function useCatalog(tenantId: string, effectiveOnline: boolean) {
       const localProduct: Product = {
         id: tempId,
         tenant_id: tenantId,
-        category_id: input.category_id || null,
+        category_id: validated.category_id,
         barcode: cleanBarcode,
         name: cleanName,
-        cost_price: Number(input.cost_price) || 0,
-        sale_price: Number(input.sale_price) || 0,
-        stock: Number(input.stock) || 0,
-        min_stock: Number(input.min_stock) || 0,
+        cost_price: validated.cost_price,
+        sale_price: validated.sale_price,
+        stock: validated.stock,
+        min_stock: validated.min_stock,
         is_active: true,
         updated_at: new Date().toISOString(),
       };
@@ -122,7 +121,7 @@ export function useCatalog(tenantId: string, effectiveOnline: boolean) {
       const pendingEntry: PendingProduct = {
         temp_id: tempId,
         tenant_id: tenantId,
-        category_id: input.category_id || null,
+        category_id: validated.category_id,
         barcode: cleanBarcode,
         name: cleanName,
         cost_price: localProduct.cost_price,
