@@ -10,6 +10,15 @@ interface ProductCardProps {
   onAdd: (product: Product) => void;
 }
 
+/** Tono HSL determinista por categoría para colorear la tesela (estilo Smart Grid). */
+function categoryHue(name: string): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) {
+    hash = (hash * 31 + name.charCodeAt(i)) % 360;
+  }
+  return hash;
+}
+
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   inCartQty,
@@ -19,11 +28,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const isEmpty = product.stock <= 0;
   const isLow = product.stock > 0 && product.stock <= product.min_stock;
   const stockClass = isEmpty ? 'stock-empty' : isLow ? 'stock-low' : 'stock-ok';
+  const tileStyle = {
+    '--tile-hue': categoryHue(product.category_name || 'General'),
+    ...(isEmpty ? { opacity: 0.58, cursor: 'not-allowed' } : {}),
+  } as React.CSSProperties;
 
   return (
     <div
-      className="product-card"
-      style={isEmpty ? { opacity: 0.58, cursor: 'not-allowed' } : undefined}
+      className={`product-card smart-tile ${inCartQty > 0 ? 'in-cart' : ''}`}
+      style={tileStyle}
       onClick={() => !isEmpty && onAdd(product)}
     >
       <div>

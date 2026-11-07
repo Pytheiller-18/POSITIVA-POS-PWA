@@ -254,3 +254,106 @@ body {
     padding-bottom: 70px;
   }
 }
+
+
+/* =========================================================================
+   SHELL ESTILO SHOPIFY POS: riel lateral (escritorio) / barra inferior (móvil)
+   ========================================================================= */
+.app-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.app-nav {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  width: 84px;
+  flex-shrink: 0;
+  padding: 0.75rem 0.5rem;
+  border-bottom: none;
+  border-right: 1px solid var(--border-color);
+  position: sticky;
+  top: 57px;
+  height: calc(100vh - 57px);
+  overflow-y: auto;
+}
+
+.nav-tab {
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.55rem 0.25rem;
+  border-radius: var(--radius-md, 12px);
+  font-size: 0.7rem;
+}
+
+.nav-tab-icon {
+  position: relative;
+  display: inline-flex;
+}
+
+.nav-tab-badge {
+  position: absolute;
+  top: -6px;
+  right: -12px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background-color: var(--danger, #ef4444);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.app-main {
+  min-width: 0;
+  margin: 0;
+  max-width: none;
+}
+
+@media (min-width: 1024px) {
+  .pos-layout {
+    grid-template-columns: 1.7fr 1fr;
+    height: calc(100vh - 57px - 2rem);
+  }
+
+  .cart-pane {
+    top: 0;
+    height: 100%;
+  }
+}
+
+@media (max-width: 1023px) {
+  .app-nav {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 64px;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 0.25rem 0.5rem;
+    border-right: none;
+    border-top: 1px solid var(--border-color);
+    z-index: 95;
+  }
+
+  .nav-tab {
+    flex: 1;
+  }
+
+  .app-main {
+    padding-bottom: 80px;
+  }
+
+  .mobile-cart-bar {
+    bottom: 64px;
+  }
+}

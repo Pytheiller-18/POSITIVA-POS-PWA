@@ -15,14 +15,17 @@ const PosShell: React.FC = () => {
   return (
     <>
       <Header onOpenLogin={() => setLoginModalOpen(true)} />
-      <Navigation />
 
-      <main className="app-main">
-        {currentView === 'pos' && <PosView />}
-        {currentView === 'inventory' && <InventoryView />}
-        {currentView === 'reports' && <ReportsView />}
-        {currentView === 'sync' && <SyncView />}
-      </main>
+      <div className="app-body">
+        <Navigation />
+
+        <main className="app-main">
+          {currentView === 'pos' && <PosView />}
+          {currentView === 'inventory' && <InventoryView />}
+          {currentView === 'reports' && <ReportsView />}
+          {currentView === 'sync' && <SyncView />}
+        </main>
+      </div>
 
       <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
 

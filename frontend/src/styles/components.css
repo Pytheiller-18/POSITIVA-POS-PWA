@@ -1210,3 +1210,79 @@
   padding: 2.25rem 1rem;
   color: var(--text-secondary);
 }
+
+
+/* =========================================================================
+   SMART GRID (estilo Shopify POS): teselas por categoría con acento de color
+   ========================================================================= */
+.smart-tile {
+  --tile-accent: hsl(var(--tile-hue, 240) 70% 58%);
+  position: relative;
+  min-height: 132px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  border-top: 5px solid var(--tile-accent);
+  background-image: linear-gradient(
+    180deg,
+    hsl(var(--tile-hue, 240) 70% 58% / 0.12),
+    transparent 55%
+  );
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.smart-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+}
+
+.smart-tile:active {
+  transform: scale(0.97);
+}
+
+.smart-tile.in-cart {
+  border-color: var(--tile-accent);
+  box-shadow: 0 0 0 2px var(--tile-accent);
+}
+
+.smart-tile .product-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.smart-tile .product-price {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.smart-tile .product-barcode {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .smart-tile .product-barcode {
+    display: block;
+  }
+}
+
+/* Barra de búsqueda destacada y fija al desplazar el catálogo */
+.catalog-pane .search-bar-container {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 0.5rem 0;
+  background-color: var(--bg-body);
+}
+
+.catalog-pane .search-input-wrapper input {
+  border-radius: 999px;
+}
+
+/* Total de carrito destacado y botón de cobro de ancho completo */
+.cart-pane .btn-success.btn-block {
+  width: 100%;
+  min-height: 56px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  border-radius: 14px;
+}

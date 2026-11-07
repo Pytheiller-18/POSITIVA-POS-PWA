@@ -9,18 +9,18 @@ export const Navigation: React.FC = () => {
   const lowStockCount = products.filter((p) => p.stock <= p.min_stock).length;
 
   const tabs: Array<{ id: PosView; label: string; icon: React.ReactNode; badge?: number }> = [
-    { id: 'pos', label: 'Caja POS', icon: <ShoppingCart size={17} /> },
+    { id: 'pos', label: 'Caja', icon: <ShoppingCart size={22} /> },
     {
       id: 'inventory',
       label: 'Inventario',
-      icon: <Package size={17} />,
+      icon: <Package size={22} />,
       badge: lowStockCount > 0 ? lowStockCount : undefined,
     },
-    { id: 'reports', label: 'Reportes & Analíticas', icon: <BarChart3 size={17} /> },
+    { id: 'reports', label: 'Reportes', icon: <BarChart3 size={22} /> },
     {
       id: 'sync',
-      label: 'Sincronización Offline',
-      icon: <RefreshCw size={17} />,
+      label: 'Sync',
+      icon: <RefreshCw size={22} />,
       badge: totalPendingCount > 0 ? totalPendingCount : undefined,
     },
   ];
@@ -33,17 +33,15 @@ export const Navigation: React.FC = () => {
           type="button"
           className={`nav-tab ${currentView === tab.id ? 'active' : ''}`}
           onClick={() => setCurrentView(tab.id)}
+          aria-current={currentView === tab.id ? 'page' : undefined}
         >
-          {tab.icon}
-          <span>{tab.label}</span>
-          {tab.badge !== undefined && (
-            <span className="sync-badge" style={{ padding: '0.1rem 0.45rem', fontSize: '0.7rem' }}>
-              {tab.badge}
-            </span>
-          )}
+          <span className="nav-tab-icon">
+            {tab.icon}
+            {tab.badge !== undefined && <span className="nav-tab-badge">{tab.badge}</span>}
+          </span>
+          <span className="nav-tab-label">{tab.label}</span>
         </button>
       ))}
     </nav>
   );
 };
-
