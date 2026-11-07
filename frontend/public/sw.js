@@ -1,24 +1,16 @@
-const CACHE_NAME = 'positiva-pos-v1';
+const CACHE_NAME = 'positiva-pos-pwa-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './css/variables.css',
-  './css/layout.css',
-  './css/components.css',
-  './js/vendor/html5-qrcode.min.js',
-  './js/db.js',
-  './js/api.js',
-  './js/sync.js',
-  './js/app.js',
-  './assets/icon.svg'
+  './assets/icon.svg',
+  './vendor/html5-qrcode.min.js'
 ];
 
-// Instalación: Cachear App Shell
+// Instalación: Pre-cachear App Shell esencial y motor óptico de códigos de barras
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Pre-cacheando App Shell de Positiva-POS...');
       return cache.addAll(STATIC_ASSETS);
     }).then(() => self.skipWaiting())
   );
@@ -31,7 +23,6 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('[SW] Eliminando caché obsoleta:', key);
             return caches.delete(key);
           }
         })
@@ -41,19 +32,17 @@ self.addEventListener('activate', (event) => {
 });
 
 // Estrategia Fetch:
-// - Para llamadas de API (/api/): Network-First
-// - Para recursos estáticos GET: Cache-First con actualización en segundo plano
+// - /api/: Network-First con respuesta controlada 503 en modo sin red
+// - Activos estáticos y bundles Vite (/assets/*): Stale-While-Revalidate
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Excluir llamadas de sincronización y mutación directa de API
   if (url.pathname.includes('/api/')) {
     event.respondWith(
       fetch(event.request).catch(() => {
-        // En caso de corte de red, devolver respuesta JSON simulada offline
         return new Response(JSON.stringify({
           offline: true,
-          message: 'Sin conexión a internet. La operación se procesará mediante IndexedDB local.'
+          message: 'Sin conexión a internet. Operación respaldada en IndexedDB local.'
         }), {
           headers: { 'Content-Type': 'application/json' },
           status: 503
@@ -63,12 +52,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // (O7) Solo peticiones GET pueden ser cacheadas
   if (event.request.method !== 'GET') {
     return;
   }
 
-  // Para estáticos: Stale-While-Revalidate
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
@@ -86,7 +73,6 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Escucha de mensajes desde la app (ej: forzar actualización de caché)
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();

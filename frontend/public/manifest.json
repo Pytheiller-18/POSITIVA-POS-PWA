@@ -1,0 +1,20 @@
+{
+  "name": "Positiva-POS — Un sistema de ventas en tu bolsillo",
+  "short_name": "Positiva-POS",
+  "description": "Plataforma SaaS de Punto de Venta e Inventario Ligera, Multi-Tenant y Offline-First.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0f19",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "finance", "productivity"]
+}

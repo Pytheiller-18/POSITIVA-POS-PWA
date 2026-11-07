@@ -988,3 +988,225 @@
     transform: translateY(0) scale(1);
   }
 }
+
+
+/* =========================================================================
+   ERGONOMÍA TÁCTIL (>= 44px), TABLAS MODULARES, FILTROS Y GRÁFICAS CSS
+   ========================================================================= */
+.btn,
+.btn-scanner,
+.cash-pill-btn,
+.theme-toggle-btn,
+.form-control,
+.search-input-wrapper input {
+  min-height: var(--touch-min, 44px);
+}
+
+.theme-toggle-btn {
+  width: var(--touch-min, 44px);
+  height: var(--touch-min, 44px);
+}
+
+.product-add-btn,
+.cart-qty-btn {
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.btn-action {
+  background: linear-gradient(135deg, var(--accent-purple), var(--primary));
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.btn-action:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-purple-hover), var(--primary-hover));
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.stock-ok {
+  background: var(--stock-mint-light);
+  color: var(--stock-mint);
+}
+
+.section-header-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.section-title-block h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-title-block p {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.filter-toolbar {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.filter-select,
+.filter-date-input {
+  min-height: var(--touch-min, 44px);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.84rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.filter-select:focus,
+.filter-date-input:focus {
+  border-color: var(--border-focus);
+}
+
+.clear-input-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.35rem 0.5rem;
+  font-size: 1.1rem;
+}
+
+.table-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.8rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  background-color: var(--bg-surface);
+  font-weight: 700;
+}
+
+.data-table tbody tr:hover {
+  background-color: var(--bg-card-hover);
+}
+
+.analytics-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (min-width: 960px) {
+  .analytics-grid-2col {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.panel-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.15rem;
+}
+
+.panel-card h3 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 92px 1fr 96px;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.55rem;
+  font-size: 0.8rem;
+}
+
+.bar-track {
+  height: 10px;
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--success));
+  border-radius: var(--radius-full);
+  transition: width 0.25s ease;
+}
+
+.payment-methods-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.form-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.empty-box {
+  text-align: center;
+  padding: 2.25rem 1rem;
+  color: var(--text-secondary);
+}
