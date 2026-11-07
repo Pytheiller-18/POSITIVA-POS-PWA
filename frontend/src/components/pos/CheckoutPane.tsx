@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { CheckCircle2, ShoppingBag, Trash2 } from 'lucide-react';
 import { usePos } from '../../context/PosContext.tsx';
 import type { PaymentMethod } from '../../types/pos.ts';
+import { calculateCashChange } from '../../utils/domain.ts';
 import { formatCOP } from '../../utils/formatters.ts';
 import { CartItemRow } from './CartItemRow.tsx';
 import { CashQuickPad } from './CashQuickPad.tsx';
@@ -35,7 +36,8 @@ export const CheckoutPane: React.FC<CheckoutPaneProps> = ({ onSaleCompleted }) =
     setAmountPaid(total);
   }, [total, paymentMethod]);
 
-  const isCashShort = paymentMethod === 'CASH' && amountPaid < total;
+  const cashEvaluation = calculateCashChange(total, amountPaid, paymentMethod);
+  const isCashShort = cashEvaluation.status === 'SHORT';
 
   const handleCheckout = async () => {
     if (cart.length === 0 || isCashShort || submitting) return;
@@ -94,7 +96,7 @@ export const CheckoutPane: React.FC<CheckoutPaneProps> = ({ onSaleCompleted }) =
           <span>{formatCOP(subtotal, tenant.currency_symbol)}</span>
         </div>
 
-        <div className="summary-row" style={{ alignItems: 'center' }}>
+        <div className="summary-row">
           <label htmlFor="pos-discount-pct">Descuento (%)</label>
           <input
             id="pos-discount-pct"
@@ -107,13 +109,15 @@ export const CheckoutPane: React.FC<CheckoutPaneProps> = ({ onSaleCompleted }) =
               setDiscountPercentage(Math.min(100, Math.max(0, Number(e.target.value) || 0)))
             }
             style={{
-              width: 68,
-              padding: '0.25rem 0.45rem',
+              width: 76,
+              minHeight: 38,
+              padding: '0.25rem 0.5rem',
               textAlign: 'right',
-              borderRadius: 6,
+              borderRadius: 8,
               border: '1px solid var(--border-color)',
               background: 'var(--bg-card)',
               color: 'var(--text-main)',
+              fontVariantNumeric: 'tabular-nums',
             }}
           />
         </div>
@@ -148,14 +152,13 @@ export const CheckoutPane: React.FC<CheckoutPaneProps> = ({ onSaleCompleted }) =
         disabled={cart.length === 0 || isCashShort || submitting}
         onClick={handleCheckout}
       >
-        <CheckCircle2 size={18} />
+        <CheckCircle2 size={20} />
         <span>
           {submitting
             ? 'Guardando Venta...'
-            : `Cobrar ${formatCOP(total, tenant.currency_symbol)}`}
+            : `Cobrar Venta · ${formatCOP(total, tenant.currency_symbol)}`}
         </span>
       </button>
     </div>
   );
 };
-

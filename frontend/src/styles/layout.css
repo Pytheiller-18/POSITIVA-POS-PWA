@@ -1,34 +1,65 @@
-* {
+/* =========================================================================
+   POSITIVA-POS DESIGN SYSTEM — Arquitectura de Layout Mobile-First y Dual-Pane
+   - Encuadre estricto de viewport (100dvh) sin desbordamiento horizontal.
+   - Riel lateral en escritorio (>= 1024px) y barra inferior ergonómica en móvil.
+   ========================================================================= */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
 }
 
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--font-family);
+  font-size: var(--fs-body);
+  line-height: 1.5;
   background-color: var(--bg-body);
   color: var(--text-main);
-  line-height: 1.5;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow-x: hidden;
+  min-height: 100dvh;
   transition: var(--theme-transition);
 }
 
-/* Header & Navbar */
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* Cabecera Superior de Estado Multi-Tenant */
 .app-header {
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-color);
-  padding: 0.75rem 1.25rem;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  padding: 0.65rem 1.15rem;
+  flex: 0 0 auto;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
+  min-width: 0;
+  z-index: 100;
   transition: var(--theme-transition);
 }
 
@@ -36,46 +67,68 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
 }
 
 .brand-logo {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.brand-title-group {
+  min-width: 0;
 }
 
 .brand-title-group h1 {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: -0.025em;
-  background: linear-gradient(135deg, #818cf8, #38bdf8);
+  background: linear-gradient(135deg, var(--primary-accent), var(--accent-purple));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .brand-subtitle {
-  font-size: 0.75rem;
+  font-size: var(--fs-caption);
   color: var(--text-secondary);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;
 }
 
 .header-status-group {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  min-width: 0;
 }
 
-/* Nav Tabs */
+/* Cuerpo Principal: Riel de Navegación + Área Operativa */
+.app-body {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+}
+
 .app-nav {
   background-color: var(--bg-surface);
-  border-bottom: 1px solid var(--border-color);
-  padding: 0.25rem 1rem;
+  border-right: 1px solid var(--border-color);
+  flex: 0 0 auto;
   display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+  width: 88px;
+  padding: 0.75rem 0.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
   scrollbar-width: none;
 }
 
@@ -86,105 +139,98 @@ body {
 .nav-tab {
   background: transparent;
   color: var(--text-secondary);
-  border: none;
-  min-height: var(--touch-min, 44px);
-  padding: 0.6rem 1rem;
-  font-size: 0.875rem;
+  border: 1px solid transparent;
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+  padding: 0.55rem 0.3rem;
+  font-size: var(--fs-caption);
   font-weight: 600;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.25rem;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .nav-tab:hover {
   color: var(--text-main);
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-card-hover);
 }
 
 .nav-tab.active {
-  color: #fff;
-  background-color: var(--primary);
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
 }
 
-/* Contenedor Principal de Vistas */
+.nav-tab-icon {
+  position: relative;
+  display: inline-flex;
+}
+
+.nav-tab-badge {
+  position: absolute;
+  top: -6px;
+  right: -12px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-full);
+  background-color: var(--danger);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.nav-tab-badge.badge-warning {
+  background-color: var(--warning);
+  color: #0b0f19;
+}
+
 .app-main {
-  flex: 1;
-  padding: 1rem;
-  max-width: 1600px;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
   width: 100%;
-  margin: 0 auto;
-}
-
-.view-section {
-  display: none;
-}
-
-.view-section.active {
-  display: block;
+  padding: 1rem;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* =========================================================================
-   DISEÑO POS DUAL-PANE (SPLIT VIEW PARA COMPUTADOR Y ADAPTABLE PARA MÓVIL)
+   CAJA POS DUAL-PANE Y REJILLAS RESPONSIVAS SIN DESBORDAMIENTO
    ========================================================================= */
 .pos-layout {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.15rem;
   align-items: start;
 }
 
-@media (min-width: 1024px) {
-  .pos-layout {
-    grid-template-columns: 1.6fr 1fr;
-    height: calc(100vh - 125px);
-  }
-
-  .catalog-pane {
-    height: 100%;
-    overflow-y: auto;
-    padding-right: 0.5rem;
-  }
-
-  .cart-pane {
-    position: sticky;
-    top: 80px;
-    height: calc(100vh - 145px);
-    display: flex;
-    flex-direction: column;
-  }
+.catalog-pane,
+.cart-pane {
+  min-width: 0;
 }
 
-/* Responsive Grid de Productos */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 0.875rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(165px, 100%), 1fr));
+  gap: 0.85rem;
 }
 
-@media (min-width: 640px) {
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
-  }
-}
-
-@media (min-width: 1280px) {
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  }
-}
-
-/* Categorías Horizontales */
 .categories-bar {
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
   padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.85rem;
   scrollbar-width: thin;
 }
 
@@ -192,54 +238,119 @@ body {
   background-color: var(--bg-card);
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
-  min-height: var(--touch-min, 44px);
+  min-height: var(--touch-min);
   display: inline-flex;
   align-items: center;
-  padding: 0.4rem 0.95rem;
+  padding: 0.45rem 1rem;
   border-radius: var(--radius-full);
-  font-size: 0.8rem;
+  font-size: var(--fs-body);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
 .category-chip:hover,
 .category-chip.active {
   background-color: var(--primary);
   border-color: var(--primary);
-  color: #fff;
+  color: #ffffff;
 }
 
-/* Barra Flotante de Carrito en Móvil */
+/* Barra Flotante de Orden en Móvil */
 .mobile-cart-bar {
   display: none;
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 0.5rem;
+  right: 0.5rem;
+  min-height: 56px;
   background-color: var(--bg-surface);
-  border-top: 1px solid var(--border-color);
-  padding: 0.85rem 1.25rem;
-  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1rem;
+  box-shadow: var(--shadow-lg);
   z-index: 90;
   justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+@media (min-width: 640px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(185px, 100%), 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .pos-layout {
+    grid-template-columns: minmax(0, 1.68fr) minmax(0, 1fr);
+    height: 100%;
+    align-items: stretch;
+  }
+
+  .catalog-pane {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0.35rem;
+  }
+
+  .cart-pane {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+}
+
+@media (min-width: 1280px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+  }
 }
 
 @media (max-width: 1023px) {
+  .app-body {
+    flex-direction: column;
+  }
+
+  .app-main {
+    order: 1;
+  }
+
+  .app-nav {
+    order: 2;
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    min-height: 64px;
+    padding: 0.3rem 0.5rem calc(0.3rem + env(safe-area-inset-bottom, 0px));
+    border-right: none;
+    border-top: 1px solid var(--border-color);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .nav-tab {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
   .cart-pane {
     display: none;
   }
-  
+
   .cart-pane.mobile-open {
     display: flex;
     flex-direction: column;
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
+    max-width: 100vw;
+    height: 100dvh;
     z-index: 200;
     background-color: var(--bg-surface);
     padding: 1rem;
@@ -248,9 +359,10 @@ body {
 
   .mobile-cart-bar {
     display: flex;
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px));
   }
 
   .pos-layout {
-    padding-bottom: 70px;
+    padding-bottom: 76px;
   }
 }

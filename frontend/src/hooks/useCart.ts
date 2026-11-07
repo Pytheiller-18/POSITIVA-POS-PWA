@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { posDB } from '../services/db.ts';
 import type { CartItem, PaymentMethod, Product, SaleRecord, User } from '../types/pos.ts';
 import { playScannerBeep } from '../utils/audio.ts';
+import { calculateCashChange } from '../utils/domain.ts';
 import { calculateCartTotals } from '../utils/formatters.ts';
 import { generateUUIDv7 } from '../utils/uuid7.ts';
 
@@ -85,13 +86,14 @@ export function useCart(params: {
       if (cart.length === 0) {
         throw new Error('Agrega al menos un producto antes de cobrar');
       }
-      if (paymentMethod === 'CASH' && amountPaid < totals.total) {
+      const cashCalc = calculateCashChange(totals.total, amountPaid, paymentMethod);
+      if (cashCalc.status === 'SHORT') {
         throw new Error('El efectivo recibido es menor al total a pagar');
       }
 
       const clientSyncId = generateUUIDv7();
-      const effectivePaid = paymentMethod === 'CASH' ? amountPaid : totals.total;
-      const changeDue = Math.max(0, effectivePaid - totals.total);
+      const effectivePaid = cashCalc.effectivePaid;
+      const changeDue = cashCalc.changeDue;
 
       const saleRecord: SaleRecord = {
         client_sync_id: clientSyncId,

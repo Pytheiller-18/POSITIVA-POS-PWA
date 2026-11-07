@@ -1,24 +1,24 @@
-from datetime import datetime
 from flask import Blueprint, request, jsonify, g
 from app.models.sale import Sale
 from app.services.sale_service import process_sale
 from app.middlewares.auth import tenant_required
-from app.utils.validators import to_int
+from app.utils.validators import to_int, require_json_object, parse_iso_datetime
 
 sales_bp = Blueprint('sales', __name__, url_prefix='/api/v1/sales')
 
 # ============================================================================
 # DOBLE VERIFICACIÓN DE SEGURIDAD - VENTAS:
 # 1. process_sale() encapsula toda la transacción asegurando que el cajero
-#    solo pueda registrar ventas para el tenant al que pertenece.
+#    solo pueda registrar ventas para el tenant extraído del JWT (g.tenant_id).
 # 2. Las consultas históricas no pueden acceder a transacciones de otros tenants.
 # ============================================================================
+
 
 @sales_bp.route('', methods=['POST'])
 @tenant_required()
 def create_sale():
     """Registra una venta en el punto de venta de forma directa/online."""
-    data = request.get_json(silent=True) or {}
+    data = require_json_object(request.get_json(silent=True))
     result, status_code = process_sale(
         tenant_id=g.tenant_id,
         user_id=g.user_id,
@@ -27,10 +27,11 @@ def create_sale():
     )
     return jsonify(result), status_code
 
+
 @sales_bp.route('', methods=['GET'])
 @tenant_required()
 def list_sales():
-    """Lista las ventas del tenant con soporte de paginación y filtros de fecha."""
+    """Lista las ventas del tenant con soporte de paginación y filtros de fecha validados."""
     page = to_int(request.args.get('page'), 'page', default=1, min_value=1, max_value=100000)
     per_page = to_int(request.args.get('per_page'), 'per_page', default=20, min_value=1, max_value=100)
     start_date = request.args.get('start_date')
@@ -39,18 +40,12 @@ def list_sales():
     query = Sale.query.filter_by(tenant_id=g.tenant_id)
 
     if start_date:
-        try:
-            st = datetime.fromisoformat(start_date)
-            query = query.filter(Sale.created_at >= st)
-        except Exception:
-            pass
+        st = parse_iso_datetime(start_date, 'start_date')
+        query = query.filter(Sale.created_at >= st.replace(tzinfo=None) if st.tzinfo else st)
 
     if end_date:
-        try:
-            et = datetime.fromisoformat(end_date)
-            query = query.filter(Sale.created_at <= et)
-        except Exception:
-            pass
+        et = parse_iso_datetime(end_date, 'end_date')
+        query = query.filter(Sale.created_at <= et.replace(tzinfo=None) if et.tzinfo else et)
 
     paginated = query.order_by(Sale.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
@@ -62,6 +57,7 @@ def list_sales():
         'total_pages': paginated.pages,
         'sales': [s.to_dict(include_items=False) for s in paginated.items]
     }), 200
+
 
 @sales_bp.route('/<sale_id>', methods=['GET'])
 @tenant_required()

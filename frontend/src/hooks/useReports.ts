@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { apiClient } from '../services/api.ts';
 import { DEMO_TENANT_ID } from '../services/db.ts';
 import type { Product, RecordFilterCriteria, SaleRecord, SyncStatusFilter } from '../types/pos.ts';
+import { computeQuickDateRange } from '../utils/domain.ts';
 import { buildAnalyticsSnapshot, filterSaleRecords } from '../utils/filters.ts';
 import { useDebounce } from './useDebounce.ts';
 
@@ -70,18 +71,9 @@ export function useReports(params: {
   );
 
   const applyQuickRange = (days: number | null) => {
-    if (days === null) {
-      setDateFrom('');
-      setDateTo('');
-      return;
-    }
-    const end = new Date();
-    const start = new Date();
-    start.setDate(end.getDate() - (days - 1));
-    const fmt = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    setDateFrom(fmt(start));
-    setDateTo(fmt(end));
+    const range = computeQuickDateRange(days);
+    setDateFrom(range.dateFrom);
+    setDateTo(range.dateTo);
   };
 
   return {

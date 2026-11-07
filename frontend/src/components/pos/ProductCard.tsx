@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, Plus } from 'lucide-react';
 import type { Product } from '../../types/pos.ts';
+import { computeCategoryHue } from '../../utils/domain.ts';
 import { formatCOP } from '../../utils/formatters.ts';
 
 interface ProductCardProps {
@@ -19,11 +20,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const isEmpty = product.stock <= 0;
   const isLow = product.stock > 0 && product.stock <= product.min_stock;
   const stockClass = isEmpty ? 'stock-empty' : isLow ? 'stock-low' : 'stock-ok';
+  const cardStyle = {
+    '--card-hue': computeCategoryHue(product.category_name || 'General'),
+    ...(isEmpty ? { opacity: 0.58, cursor: 'not-allowed' } : {}),
+  } as React.CSSProperties;
 
   return (
     <div
-      className="product-card"
-      style={isEmpty ? { opacity: 0.58, cursor: 'not-allowed' } : undefined}
+      className={`product-card positiva-product-card ${inCartQty > 0 ? 'in-cart' : ''}`}
+      style={cardStyle}
       onClick={() => !isEmpty && onAdd(product)}
     >
       <div>
@@ -41,8 +46,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="product-price-row">
         <span className="product-price">{formatCOP(product.sale_price, currencySymbol)}</span>
         {inCartQty > 0 ? (
-          <span className="product-stock-tag stock-ok" style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-            <Check size={13} /> {inCartQty}
+          <span
+            className="product-stock-tag stock-ok"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 32 }}
+          >
+            <Check size={14} /> {inCartQty}
           </span>
         ) : (
           <button
@@ -50,16 +58,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             className="product-add-btn"
             disabled={isEmpty}
             title="Agregar producto a la orden"
+            aria-label={`Agregar ${product.name} a la orden`}
             onClick={(e) => {
               e.stopPropagation();
               if (!isEmpty) onAdd(product);
             }}
           >
-            <Plus size={16} />
+            <Plus size={18} />
           </button>
         )}
       </div>
     </div>
   );
 };
-
