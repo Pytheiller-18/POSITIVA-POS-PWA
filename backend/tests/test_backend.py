@@ -306,5 +306,122 @@ class POSBackendTestCase(unittest.TestCase):
         self.assertIsNotNone(new_prod.id)
         self.assertTrue(is_uuid7(new_prod.id), f"El ID asignado ({new_prod.id}) debe ser un UUIDv7 válido")
 
+    def test_cross_tenant_reports_and_sync_status_isolation(self):
+        """Aislamiento estricto en reportes y estado de sincronización entre Tenant A y Tenant B."""
+        headers_a = {'Authorization': f'Bearer {self.token_a}'}
+        headers_b = {'Authorization': f'Bearer {self.token_b}'}
+
+        self.client.post('/api/v1/sales', json={
+            'client_sync_id': uuid7_str(),
+            'items': [{'product_id': self.product_a.id, 'quantity': 2}]
+        }, headers=headers_a)
+
+        res_b_today = self.client.get('/api/v1/reports/today', headers=headers_b)
+        self.assertEqual(res_b_today.status_code, 200)
+        self.assertEqual(res_b_today.json['data']['total_sales'], 0.0)
+        self.assertEqual(res_b_today.json['data']['transaction_count'], 0)
+
+        res_b_sync = self.client.get('/api/v1/sync/status', headers=headers_b)
+        self.assertEqual(res_b_sync.status_code, 200)
+        self.assertEqual(res_b_sync.json['total_sales_recorded'], 0)
+        self.assertEqual(res_b_sync.json['tenant_id'], self.tenant_b.id)
+
+    def test_sync_batch_partial_failure_and_max_limit(self):
+        """Aísla fallos individuales en un lote offline y rechaza lotes superiores a MAX_SYNC_BATCH_SIZE."""
+        headers_a = {'Authorization': f'Bearer {self.token_a}'}
+
+        mixed_batch = {
+            'device_id': 'POS-ANDROID-02',
+            'sales': [
+                {
+                    'client_sync_id': uuid7_str(),
+                    'items': [{'product_id': self.product_a.id, 'quantity': 2}]
+                },
+                {
+                    'client_sync_id': uuid7_str(),
+                    'items': [{'product_id': 'non-existent-sku', 'quantity': 1}]
+                }
+            ]
+        }
+        res = self.client.post('/api/v1/sync/sales-batch', json=mixed_batch, headers=headers_a)
+        self.assertEqual(res.status_code, 200)
+        summary = res.json['summary']
+        self.assertEqual(summary['synced_count'], 1)
+        self.assertEqual(summary['failed_count'], 1)
+        self.assertEqual(len(summary['synced_ids']), 1)
+        self.assertEqual(len(summary['failed']), 1)
+
+        oversized_batch = {
+            'device_id': 'POS-DOS-TEST',
+            'sales': [{'client_sync_id': uuid7_str(), 'items': []} for _ in range(201)]
+        }
+        res_limit = self.client.post('/api/v1/sync/sales-batch', json=oversized_batch, headers=headers_a)
+        self.assertEqual(res_limit.status_code, 400)
+
+    def test_delta_catalog_sync_since_parameter(self):
+        """Verifica descarga diferencial ?since= incluyendo bajas lógicas (soft-delete)."""
+        import time
+        headers_a = {'Authorization': f'Bearer {self.token_a}'}
+
+        res_initial = self.client.get('/api/v1/products', headers=headers_a)
+        self.assertEqual(res_initial.status_code, 200)
+        self.assertFalse(res_initial.json['is_delta'])
+        checkpoint = res_initial.json['server_time']
+
+        time.sleep(0.02)
+        res_del = self.client.delete(f'/api/v1/products/{self.product_a.id}', headers=headers_a)
+        self.assertEqual(res_del.status_code, 200)
+
+        res_delta = self.client.get(f'/api/v1/products?since={checkpoint}', headers=headers_a)
+        self.assertEqual(res_delta.status_code, 200)
+        self.assertTrue(res_delta.json['is_delta'])
+        self.assertEqual(len(res_delta.json['products']), 1)
+        self.assertFalse(res_delta.json['products'][0]['is_active'])
+
+    def test_validators_and_login_rate_limiter(self):
+        """Valida sanitización tipada y ventana deslizante anti fuerza bruta."""
+        from decimal import Decimal
+        from app.utils.validators import (
+            LoginRateLimiter,
+            ValidationError,
+            clean_str,
+            to_decimal,
+            to_int,
+        )
+
+        self.assertEqual(to_decimal('18500.456', 'precio', min_value=0), Decimal('18500.46'))
+        self.assertEqual(to_int('15', 'stock', min_value=0), 15)
+        self.assertEqual(clean_str('  Café Molido  ', 'nombre', 50, required=True), 'Café Molido')
+
+        with self.assertRaises(ValidationError):
+            to_decimal('-10', 'precio', min_value=0)
+        with self.assertRaises(ValidationError):
+            to_int('3.5', 'stock')
+
+        limiter = LoginRateLimiter()
+        key = ('127.0.0.1', 'attacker@alpha.com')
+        for _ in range(3):
+            limiter.register_failure(key, window=60)
+        self.assertGreater(limiter.is_blocked(key, max_attempts=3, window=60), 0)
+        limiter.reset(key)
+        self.assertEqual(limiter.is_blocked(key, max_attempts=3, window=60), 0)
+
+    def test_pwa_shell_and_service_worker_headers(self):
+        """Verifica entrega de index.html y cabeceras no-cache en sw.js desde frontend/dist."""
+        res_index = self.client.get('/')
+        try:
+            self.assertEqual(res_index.status_code, 200)
+            self.assertEqual(res_index.headers.get('X-Content-Type-Options'), 'nosniff')
+        finally:
+            res_index.close()
+
+        res_sw = self.client.get('/sw.js')
+        try:
+            self.assertEqual(res_sw.status_code, 200)
+            self.assertEqual(res_sw.headers.get('Cache-Control'), 'no-cache')
+            self.assertEqual(res_sw.headers.get('Service-Worker-Allowed'), '/')
+        finally:
+            res_sw.close()
+
 if __name__ == '__main__':
     unittest.main()

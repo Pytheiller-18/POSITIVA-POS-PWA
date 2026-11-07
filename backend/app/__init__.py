@@ -4,7 +4,15 @@ from app.config import Config
 from app.extensions import db, cors
 from app.utils.validators import ValidationError
 
-FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'frontend'))
+FRONTEND_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'frontend'))
+
+
+def _get_frontend_dir() -> str:
+    """Resuelve frontend/dist (compilación PWA Vite) con respaldo a frontend/."""
+    dist_dir = os.path.join(FRONTEND_ROOT, 'dist')
+    if os.path.isfile(os.path.join(dist_dir, 'index.html')):
+        return dist_dir
+    return FRONTEND_ROOT
 
 
 def create_app(config_class=Config):
@@ -47,13 +55,13 @@ def create_app(config_class=Config):
     # ------------------------------------------------------------------
     @app.route('/', methods=['GET'])
     def frontend_index():
-        return send_from_directory(FRONTEND_DIR, 'index.html')
+        return send_from_directory(_get_frontend_dir(), 'index.html')
 
     @app.route('/<path:filename>', methods=['GET'])
     def frontend_assets(filename):
         if filename.startswith('api/'):
             abort(404)
-        response = send_from_directory(FRONTEND_DIR, filename)
+        response = send_from_directory(_get_frontend_dir(), filename)
         if filename == 'sw.js':
             # El Service Worker nunca debe quedar cacheado por el navegador
             response.headers['Cache-Control'] = 'no-cache'
